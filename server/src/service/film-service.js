@@ -3,7 +3,7 @@ import {
     createContactValidation,
     getContactValidation, searchContactValidation,
     updateContactValidation
-} from "../validation/contact-validation.js";
+} from "../validation/film-validation.js";
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
 
