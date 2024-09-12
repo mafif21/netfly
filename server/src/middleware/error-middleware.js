@@ -8,11 +8,13 @@ const errorMiddleware = async (err, req, res, next) => {
 
     if (err instanceof ResponseError) {
         res.status(err.status).json({
-            errors: err.message
+            status: err.status,
+            message: err.message
         }).end();
     }  else {
         res.status(500).json({
-            errors: err.message
+            status: 500,
+            message: "INTERNAL SERVER ERROR"
         }).end();
     }
 }

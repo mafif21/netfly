@@ -2,17 +2,17 @@ import Joi from "joi";
 
 const createFilmValidation = Joi.object({
     title: Joi.string().max(100).required(),
-    description: Joi.string().max(255).optional(),
-    image: Joi.string().max(255).email().optional(),
+    description: Joi.string().max(255).required(),
+    image: Joi.string().max(255).required(),
 });
 
-const getFilmValidation = Joi.number().positive().required();
+const getFilmValidation = Joi.string().required();
 
 const updateFilmValidation = Joi.object({
-    id: Joi.number().positive().required(),
+    id: Joi.string().required(),
     title: Joi.string().max(100).required(),
     description: Joi.string().max(255).optional(),
-    image: Joi.string().max(255).email().optional(),
+    image: Joi.string().max(255).required(),
 });
 
 const searchFilmValidation = Joi.object({

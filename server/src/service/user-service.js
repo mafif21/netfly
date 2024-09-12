@@ -15,12 +15,13 @@ const register = async (request) => {
 
     const countUser = await prismaClient.user.count({
         where: {
+            email: user.email,
             username: user.username
         }
     });
 
     if (countUser === 1) {
-        throw new ResponseError(400, "Username already exists");
+        throw new ResponseError(400, "Email already exists");
     }
 
     user.password = await bcrypt.hash(user.password, 10);
@@ -28,8 +29,8 @@ const register = async (request) => {
     return prismaClient.user.create({
         data: user,
         select: {
+            email: true,
             username: true,
-            name: true
         }
     });
 }
@@ -39,6 +40,7 @@ const login = async (request) => {
 
     const user = await prismaClient.user.findUnique({
         where: {
+            email: loginRequest.email,
             username: loginRequest.username
         },
         select: {
@@ -48,7 +50,7 @@ const login = async (request) => {
     });
 
     if (!user) {
-        throw new ResponseError(401, "Username or password wrong");
+        throw new ResponseError(401, "email or password wrong");
     }
 
     const isPasswordValid = await bcrypt.compare(loginRequest.password, user.password);
@@ -79,7 +81,7 @@ const get = async (username) => {
         },
         select: {
             username: true,
-            name: true
+            email: true
         }
     });
 
@@ -104,8 +106,8 @@ const update = async (request) => {
     }
 
     const data = {};
-    if (user.name) {
-        data.name = user.name;
+    if (user.username) {
+        data.username = user.username;
     }
     if (user.password) {
         data.password = await bcrypt.hash(user.password, 10);
@@ -118,7 +120,7 @@ const update = async (request) => {
         data: data,
         select: {
             username: true,
-            name: true
+            email: true
         }
     })
 }

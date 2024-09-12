@@ -4,7 +4,9 @@ const create = async (req, res, next) => {
     try {
         const request = req.body;
         const result = await filmService.create(request);
-        res.status(200).json({
+        res.status(201).json({
+            status: 201,
+            message: "success create new data",
             data: result
         })
     } catch (e) {
@@ -17,6 +19,8 @@ const get = async (req, res, next) => {
         const filmId = req.params.filmId;
         const result = await filmService.get(filmId);
         res.status(200).json({
+            status: 200,
+            message: `success get data with id ${filmId}`,
             data: result
         })
     } catch (e) {
@@ -26,13 +30,14 @@ const get = async (req, res, next) => {
 
 const update = async (req, res, next) => {
     try {
-        const user = req.user;
-        const contactId = req.params.contactId;
+        const filmId = req.params.filmId;
         const request = req.body;
-        request.id = contactId;
+        request.id = filmId;
 
-        const result = await filmService.update(user, request);
+        const result = await filmService.update(request);
         res.status(200).json({
+            status: 200,
+            message: "success update existing film",
             data: result
         })
     } catch (e) {
@@ -42,12 +47,12 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
     try {
-        const user = req.user;
-        const contactId = req.params.contactId;
+        const filmId = req.params.filmId;
 
-        await filmService.remove(user, contactId);
+        await filmService.remove(filmId);
         res.status(200).json({
-            data: "OK"
+            status: 200,
+            message: "success delete existing data"
         })
     } catch (e) {
         next(e);
@@ -56,17 +61,16 @@ const remove = async (req, res, next) => {
 
 const search = async (req, res, next) => {
     try {
-        const user = req.user;
         const request = {
-            name: req.query.name,
-            email: req.query.email,
-            phone: req.query.phone,
+            title: req.query.title,
             page: req.query.page,
             size: req.query.size
         };
 
-        const result = await filmService.search(user, request);
+        const result = await filmService.search(request);
         res.status(200).json({
+            status: 200,
+            message: "success get all films",
             data: result.data,
             paging: result.paging
         });

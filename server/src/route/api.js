@@ -4,7 +4,7 @@ import filmController from "../controller/film-controller.js";
 import {authMiddleware} from "../middleware/auth-middleware.js";
 
 const userRouter = new express.Router();
-userRouter.use(authMiddleware);
+// userRouter.use(authMiddleware);
 
 // User API
 userRouter.get('/api/users/current', userController.get);
@@ -15,7 +15,7 @@ userRouter.delete('/api/users/logout', userController.logout);
 userRouter.post('/api/films', filmController.create);
 userRouter.get('/api/films/:filmId', filmController.get);
 userRouter.put('/api/films/:filmId', filmController.update);
-userRouter.delete('/api/filmss/:filmsId', filmController.remove);
+userRouter.delete('/api/films/:filmId', filmController.remove);
 userRouter.get('/api/films', filmController.search);
 
 export {
