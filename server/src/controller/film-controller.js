@@ -1,11 +1,9 @@
-import contactService from "../service/film-service.js";
-import {logger} from "../application/logging.js";
+import filmService from "../service/film-service.js";
 
 const create = async (req, res, next) => {
     try {
-        const user = req.user;
         const request = req.body;
-        const result = await contactService.create(user, request);
+        const result = await filmService.create(request);
         res.status(200).json({
             data: result
         })
@@ -16,9 +14,8 @@ const create = async (req, res, next) => {
 
 const get = async (req, res, next) => {
     try {
-        const user = req.user;
-        const contactId = req.params.contactId;
-        const result = await contactService.get(user, contactId);
+        const filmId = req.params.filmId;
+        const result = await filmService.get(filmId);
         res.status(200).json({
             data: result
         })
@@ -34,7 +31,7 @@ const update = async (req, res, next) => {
         const request = req.body;
         request.id = contactId;
 
-        const result = await contactService.update(user, request);
+        const result = await filmService.update(user, request);
         res.status(200).json({
             data: result
         })
@@ -48,7 +45,7 @@ const remove = async (req, res, next) => {
         const user = req.user;
         const contactId = req.params.contactId;
 
-        await contactService.remove(user, contactId);
+        await filmService.remove(user, contactId);
         res.status(200).json({
             data: "OK"
         })
@@ -68,7 +65,7 @@ const search = async (req, res, next) => {
             size: req.query.size
         };
 
-        const result = await contactService.search(user, request);
+        const result = await filmService.search(user, request);
         res.status(200).json({
             data: result.data,
             paging: result.paging

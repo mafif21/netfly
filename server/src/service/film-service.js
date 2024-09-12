@@ -1,152 +1,120 @@
 import {validate} from "../validation/validation.js";
 import {
-    createContactValidation,
-    getContactValidation, searchContactValidation,
-    updateContactValidation
+    createFilmValidation,
+    getFilmValidation, searchFilmValidation,
+    updateFilmValidation
 } from "../validation/film-validation.js";
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
 
-const create = async (user, request) => {
-    const contact = validate(createContactValidation, request);
-    contact.username = user.username;
+const create = async (request) => {
+    const film = validate(createFilmValidation, request);
 
-    return prismaClient.contact.create({
-        data: contact,
+    return prismaClient.film.create({
+        data: film,
         select: {
             id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            phone: true
+            title: true,
+            description: true,
+            image: true
         }
     });
 }
 
-const get = async (user, contactId) => {
-    contactId = validate(getContactValidation, contactId);
+const get = async (filmId) => {
+    filmId = validate(getFilmValidation, filmId);
 
-    const contact = await prismaClient.contact.findFirst({
+    const film = await prismaClient.film.findFirst({
         where: {
-            username: user.username,
-            id: contactId
+            id: filmId
         },
         select: {
             id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            phone: true
+            title: true,
+            description: true,
+            image: true
         }
     });
 
-    if (!contact) {
-        throw new ResponseError(404, "contact is not found");
+    if (!film) {
+        throw new ResponseError(404, "film is not found");
     }
 
-    return contact;
+    return film;
 }
 
-const update = async (user, request) => {
-    const contact = validate(updateContactValidation, request);
+const update = async (request) => {
+    const film = validate(updateFilmValidation, request);
 
-    const totalContactInDatabase = await prismaClient.contact.count({
+    const totalFilmInDatabase = await prismaClient.film.count({
         where: {
-            username: user.username,
-            id: contact.id
+            id: film.id
         }
     });
 
-    if (totalContactInDatabase !== 1) {
-        throw new ResponseError(404, "contact is not found");
+    if (totalFilmInDatabase !== 1) {
+        throw new ResponseError(404, "film is not found");
     }
 
-    return prismaClient.contact.update({
+    return prismaClient.film.update({
         where: {
-            id: contact.id
+            id: film.id
         },
         data: {
-            first_name: contact.first_name,
-            last_name: contact.last_name,
-            email: contact.email,
-            phone: contact.phone,
+            title: film.title,
+            description: film.description,
+            image: film.image,
         },
         select: {
             id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            phone: true
+            title: true,
+            description: true,
+            image: true
         }
     })
 }
 
-const remove = async (user, contactId) => {
-    contactId = validate(getContactValidation, contactId);
+const remove = async (filmId) => {
+    filmId = validate(getFilmValidation, filmId);
 
-    const totalInDatabase = await prismaClient.contact.count({
+    const totalInDatabase = await prismaClient.film.count({
         where: {
-            username: user.username,
-            id: contactId
+            id: filmId
         }
     });
 
     if (totalInDatabase !== 1) {
-        throw new ResponseError(404, "contact is not found");
+        throw new ResponseError(404, "film is not found");
     }
 
-    return prismaClient.contact.delete({
+    return prismaClient.film.delete({
         where: {
-            id: contactId
+            id: filmId
         }
     });
 }
 
-const search = async (user, request) => {
-    request = validate(searchContactValidation, request);
-
-    // 1 ((page - 1) * size) = 0
-    // 2 ((page - 1) * size) = 10
+const search = async (request) => {
+    request = validate(searchFilmValidation, request);
     const skip = (request.page - 1) * request.size;
 
     const filters = [];
 
-    filters.push({
-        username: user.username
-    })
-
-    if (request.name) {
+    if (request.title) {
         filters.push({
             OR: [
                 {
-                    first_name: {
-                        contains: request.name
+                    title: {
+                        contains: request.title,
+                        mode: "insensitive"
                     }
                 },
-                {
-                    last_name: {
-                        contains: request.name
-                    }
-                }
             ]
         });
     }
-    if (request.email) {
-        filters.push({
-            email: {
-                contains: request.email
-            }
-        });
-    }
-    if (request.phone) {
-        filters.push({
-            phone: {
-                contains: request.phone
-            }
-        });
-    }
 
-    const contacts = await prismaClient.contact.findMany({
+
+    const films = await prismaClient.film.findMany({
         where: {
             AND: filters
         },
@@ -154,14 +122,14 @@ const search = async (user, request) => {
         skip: skip
     });
 
-    const totalItems = await prismaClient.contact.count({
+    const totalItems = await prismaClient.film.count({
         where: {
             AND: filters
         }
     });
 
     return {
-        data: contacts,
+        data: films,
         paging: {
             page: request.page,
             total_item: totalItems,
