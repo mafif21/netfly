@@ -6,6 +6,27 @@ import {
 } from "../validation/film-validation.js";
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
+import path from "path";
+import { v4 as uuidv4 } from 'uuid';
+import * as fs from "node:fs";
+
+
+const imageFolderPath = path.join(process.cwd(), 'src/public/images');
+
+const deleteOldImage = (oldImage) => {
+    const oldImagePath = path.join(imageFolderPath, oldImage);
+    if (oldImage && fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+    }
+};
+
+const saveNewImage = async (imageFile) => {
+    const uniqueFileName = `${uuidv4()}${path.extname(imageFile.name)}`;
+    const uploadPath = path.join(imageFolderPath, uniqueFileName);
+
+    await imageFile.mv(uploadPath);
+    return uniqueFileName;
+};
 
 const create = async (request) => {
     const film = validate(createFilmValidation, request);
@@ -46,14 +67,26 @@ const get = async (filmId) => {
 const update = async (request) => {
     const film = validate(updateFilmValidation, request);
 
-    const totalFilmInDatabase = await prismaClient.film.count({
+    const filmInDatabase = await prismaClient.film.findFirst({
         where: {
             id: film.id
         }
     });
 
-    if (totalFilmInDatabase !== 1) {
+    if (!filmInDatabase) {
         throw new ResponseError(404, "film is not found");
+    }
+
+    let newImageFileName = filmInDatabase.image;
+
+    if (request.image) {
+        newImageFileName = await saveNewImage(newImageFileName);
+        const oldFilm = await prismaClient.film.findUnique({
+            where: {
+                id: film.id
+            }
+        });
+        deleteOldImage(oldFilm.image);
     }
 
     return prismaClient.film.update({
@@ -63,7 +96,7 @@ const update = async (request) => {
         data: {
             title: film.title,
             description: film.description,
-            image: film.image,
+            image: newImageFileName,
         },
         select: {
             id: true,
@@ -77,15 +110,17 @@ const update = async (request) => {
 const remove = async (filmId) => {
     filmId = validate(getFilmValidation, filmId);
 
-    const totalInDatabase = await prismaClient.film.count({
+    const findFilm = await prismaClient.film.findFirst({
         where: {
             id: filmId
         }
     });
 
-    if (totalInDatabase !== 1) {
+    if (!findFilm) {
         throw new ResponseError(404, "film is not found");
     }
+
+    deleteOldImage(findFilm.image);
 
     return prismaClient.film.delete({
         where: {

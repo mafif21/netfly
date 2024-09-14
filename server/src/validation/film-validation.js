@@ -12,7 +12,7 @@ const updateFilmValidation = Joi.object({
     id: Joi.string().required(),
     title: Joi.string().max(100).required(),
     description: Joi.string().max(255).optional(),
-    image: Joi.string().max(255).required(),
+    image: Joi.optional(),
 });
 
 const searchFilmValidation = Joi.object({
