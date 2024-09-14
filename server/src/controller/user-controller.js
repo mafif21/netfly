@@ -3,7 +3,9 @@ import userService from "../service/user-service.js";
 const register = async (req, res, next) => {
     try {
         const result = await userService.register(req.body);
-        res.status(200).json({
+        res.status(201).json({
+            status: 201,
+            message: "success register",
             data: result
         });
     } catch (e) {
@@ -15,6 +17,8 @@ const login = async (req, res, next) => {
     try {
         const result = await userService.login(req.body);
         res.status(200).json({
+            status: 200,
+            message: "success login",
             data: result
         });
     } catch (e) {

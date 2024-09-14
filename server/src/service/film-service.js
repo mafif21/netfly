@@ -6,12 +6,17 @@ import {
 } from "../validation/film-validation.js";
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
-import path from "path";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from "node:fs";
 
+import path from "path";
+import { fileURLToPath } from 'url';
 
-const imageFolderPath = path.join(process.cwd(), 'src/public/images');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+const imageFolderPath = path.join(__dirname, '..', 'public', 'images');
 
 const deleteOldImage = (oldImage) => {
     const oldImagePath = path.join(imageFolderPath, oldImage);
@@ -23,16 +28,34 @@ const deleteOldImage = (oldImage) => {
 const saveNewImage = async (imageFile) => {
     const uniqueFileName = `${uuidv4()}${path.extname(imageFile.name)}`;
     const uploadPath = path.join(imageFolderPath, uniqueFileName);
+    console.log(`uploadPath: ${uploadPath}`);
 
     await imageFile.mv(uploadPath);
     return uniqueFileName;
 };
 
+const validateImage = (mimeType) => {
+    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+    return allowedTypes.includes(mimeType);
+}
+
+
 const create = async (request) => {
     const film = validate(createFilmValidation, request);
 
+    if (!validateImage(film.image.mimetype)){
+        throw new ResponseError(400, "image not valid");
+    }
+
+    const save = await saveNewImage(film.image)
+
+
     return prismaClient.film.create({
-        data: film,
+        data: {
+            title: film.title,
+            description: film.description,
+            image: save
+        },
         select: {
             id: true,
             title: true,
@@ -80,13 +103,18 @@ const update = async (request) => {
     let newImageFileName = filmInDatabase.image;
 
     if (request.image) {
-        newImageFileName = await saveNewImage(newImageFileName);
+        if (!validateImage(film.image.mimetype)){
+            throw new ResponseError(400, "image not valid");
+        }
+
         const oldFilm = await prismaClient.film.findUnique({
             where: {
                 id: film.id
             }
         });
         deleteOldImage(oldFilm.image);
+
+        newImageFileName = await saveNewImage(request.image);
     }
 
     return prismaClient.film.update({
